@@ -1,0 +1,5 @@
+**/target/
+**/derby.log
+
+kafka-data/*
+!kafka-data/.gitkeep

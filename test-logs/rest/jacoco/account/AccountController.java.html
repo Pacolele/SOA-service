@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AccountController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">rest</a> &gt; <a href="index.source.html" class="el_package">account</a> &gt; <span class="el_source">AccountController.java</span></div><h1>AccountController.java</h1><pre class="source lang-java linenums">package account;
+
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MissingServletRequestParameterException;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import se.liu.ida.tdp024.account.logic.impl.facade.AccountLogicFacadeImpl;
+import se.liu.ida.tdp024.account.logic.impl.facade.TransactionLogicFacadeImpl;
+import se.liu.ida.tdp024.account.logic.api.facade.AccountLogicFacade;
+import se.liu.ida.tdp024.account.logic.api.facade.TransactionLogicFacade;
+import se.liu.ida.tdp024.account.data.api.entity.Account;
+import se.liu.ida.tdp024.account.data.api.entity.Transaction;
+import se.liu.ida.tdp024.account.data.impl.db.facade.AccountEntityFacadeDB;
+import se.liu.ida.tdp024.account.data.impl.db.facade.TransactionEntityFacadeDB;
+import se.liu.ida.tdp024.account.utils.logger.AccountLogger;
+import se.liu.ida.tdp024.account.utils.logger.KafkaLoggerProducer;
+
+/**
+ * @return &quot;OK&quot; eller &quot;FAILED&quot;
+ */
+@CrossOrigin(origins = &quot;*&quot;)
+@RestController
+@RequestMapping(&quot;/account-rest&quot;)
+public class AccountController {
+
+<span class="fc" id="L36">    private final AccountLogger loggerProducer = new KafkaLoggerProducer();</span>
+    private AccountLogicFacade accountLogicFacade;
+    private TransactionLogicFacade transactionLogicFacade;
+
+<span class="fc" id="L40">    public AccountController() {</span>
+<span class="fc" id="L41">        this.accountLogicFacade = new AccountLogicFacadeImpl(</span>
+                new AccountEntityFacadeDB(new TransactionEntityFacadeDB(loggerProducer)));
+<span class="fc" id="L43">        this.transactionLogicFacade = new TransactionLogicFacadeImpl(</span>
+                new TransactionEntityFacadeDB(loggerProducer));
+<span class="fc" id="L45">    }</span>
+
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ResponseEntity&lt;String&gt; handleMissingParams(MissingServletRequestParameterException e) {
+<span class="nc" id="L50">        return new ResponseEntity&lt;&gt;(&quot;FAILED&quot;, HttpStatus.OK);</span>
+    }
+
+    @GetMapping(value = &quot;/account/create&quot;)
+    public ResponseEntity&lt;String&gt; createAccount(@RequestParam(required = false) String person,
+            @RequestParam(required = false) String bank, @RequestParam(required = false) String accounttype) {
+
+<span class="pc bpc" id="L57" title="3 of 6 branches missed.">        if (person == null || bank == null || accounttype == null) {</span>
+<span class="nc" id="L58">            return new ResponseEntity&lt;&gt;(&quot;FAILED&quot;, HttpStatus.OK);</span>
+        }
+<span class="fc" id="L60">        String res = accountLogicFacade.createAccount(accounttype, person, bank);</span>
+<span class="fc bfc" id="L61" title="All 2 branches covered.">        if (!res.equals(&quot;OK&quot;)) {</span>
+<span class="fc" id="L62">            return new ResponseEntity&lt;&gt;(res, HttpStatus.OK);</span>
+        } else {
+<span class="fc" id="L64">            return new ResponseEntity&lt;&gt;(res, HttpStatus.OK);</span>
+        }
+    }
+
+    /**
+     * @return Lista på konton i JSON (se specifikation 4.1). Om inga konton
+     *         hittades skall en tom JSON array returneras (dvs []).
+     */
+    @GetMapping(value = &quot;/account/find/person&quot;, produces = &quot;application/json&quot;)
+    public ResponseEntity&lt;List&lt;Account&gt;&gt; findPerson(@RequestParam(value = &quot;person&quot;) String person) {
+<span class="fc" id="L74">        List&lt;Account&gt; res = accountLogicFacade.findAccount(person);</span>
+<span class="pc bpc" id="L75" title="1 of 2 branches missed.">        if (res.isEmpty()) {</span>
+<span class="fc" id="L76">            return new ResponseEntity&lt;&gt;(new ArrayList&lt;&gt;(), HttpStatus.OK);</span>
+        }
+<span class="nc" id="L78">        return new ResponseEntity&lt;&gt;(res, HttpStatus.OK);</span>
+    }
+
+    /**
+     * @return&quot;OK&quot; eller &quot;FAILED&quot;
+     */
+    @GetMapping(&quot;/account/debit&quot;)
+    public ResponseEntity&lt;String&gt; debitAccount(@RequestParam long id, @RequestParam long amount) {
+<span class="fc" id="L86">        String res = accountLogicFacade.debitAccount(id, amount);</span>
+<span class="pc bpc" id="L87" title="1 of 2 branches missed.">        if (res.equals(&quot;OK&quot;)) {</span>
+<span class="nc" id="L88">            return new ResponseEntity&lt;&gt;(res, HttpStatus.OK);</span>
+        } else {
+<span class="fc" id="L90">            return new ResponseEntity&lt;&gt;(res, HttpStatus.OK);</span>
+        }
+    }
+
+    /**
+     * @return &quot;OK&quot; eller &quot;FAILED&quot;
+     */
+    @GetMapping(&quot;/account/credit&quot;)
+    public ResponseEntity&lt;String&gt; creditAccount(@RequestParam long id, @RequestParam long amount) {
+<span class="fc" id="L99">        String res = accountLogicFacade.creditAccount(id, amount);</span>
+<span class="pc bpc" id="L100" title="1 of 2 branches missed.">        if (res.equals(&quot;OK&quot;)) {</span>
+<span class="nc" id="L101">            return new ResponseEntity&lt;&gt;(res, HttpStatus.OK);</span>
+        } else {
+<span class="fc" id="L103">            return new ResponseEntity&lt;&gt;(res, HttpStatus.OK);</span>
+        }
+    }
+
+    /**
+     * @return Lista på transaktioner i JSON (se specifikation 4.2). Om inga
+     *         transaktioner hittades skall en tom JSON array returneras (dvs []).
+     */
+    @GetMapping(value = &quot;/account/transactions&quot;, produces = &quot;application/json&quot;)
+    public ResponseEntity&lt;List&lt;Transaction&gt;&gt; getTransactions(@RequestParam int id) {
+<span class="nc" id="L113">        List&lt;Transaction&gt; transactions = transactionLogicFacade.getAccountTransactions(id);</span>
+<span class="nc bnc" id="L114" title="All 2 branches missed.">        if (transactions.isEmpty()) {</span>
+<span class="nc" id="L115">            return new ResponseEntity&lt;&gt;(transactions, HttpStatus.OK);</span>
+        }
+<span class="nc" id="L117">        return new ResponseEntity&lt;&gt;(transactions, HttpStatus.OK);</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

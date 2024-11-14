@@ -1,0 +1,5 @@
+redis
+redis[hiredis]
+Flask
+flask-restful
+confluent-kafka

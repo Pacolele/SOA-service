@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AccountLogicFacadeImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">logic</a> &gt; <a href="index.source.html" class="el_package">se.liu.ida.tdp024.account.logic.impl.facade</a> &gt; <span class="el_source">AccountLogicFacadeImpl.java</span></div><h1>AccountLogicFacadeImpl.java</h1><pre class="source lang-java linenums">package se.liu.ida.tdp024.account.logic.impl.facade;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+
+import se.liu.ida.tdp024.account.data.api.entity.Account;
+import se.liu.ida.tdp024.account.data.api.facade.AccountEntityFacade;
+import se.liu.ida.tdp024.account.logic.api.facade.AccountLogicFacade;
+import se.liu.ida.tdp024.account.logic.util.http.HTTPHelper;
+import se.liu.ida.tdp024.account.logic.util.http.HTTPHelperImpl;
+
+public class AccountLogicFacadeImpl implements AccountLogicFacade {
+
+    private AccountEntityFacade accountEntityFacade;
+    private HTTPHelper httpHelper;
+
+    // private static final Logger LOGGER =
+    // Logger.getLogger(AccountLogicFacadeImpl.class.g);
+<span class="fc" id="L21">    public AccountLogicFacadeImpl(AccountEntityFacade accountEntityFacade) {</span>
+<span class="fc" id="L22">        this.accountEntityFacade = accountEntityFacade;</span>
+<span class="fc" id="L23">        this.httpHelper = new HTTPHelperImpl();</span>
+<span class="fc" id="L24">    }</span>
+
+    /* check api values -&gt; get results and send to data layer */
+    @Override
+    public String createAccount(String accountType, String personKey, String bankName) {
+<span class="fc" id="L29">        System.out.println(&quot;CREATING ACCOUNT.... in AccountLogicFacadeImpl&quot;);</span>
+<span class="fc" id="L30">        String bankRes = httpHelper.get(&quot;http://project-kotlin-1:8070/find.name&quot;, &quot;name&quot;, bankName);</span>
+<span class="fc" id="L31">        String personRes = httpHelper.get(&quot;http://project-python-1:8060/find.key&quot;, &quot;key&quot;, personKey);</span>
+<span class="fc" id="L32">        System.out.println(personRes);</span>
+<span class="pc bpc" id="L33" title="3 of 8 branches missed.">        if (((personRes == null || personRes.equals(&quot;null&quot;)) || (bankRes == null || bankRes.equals(&quot;null&quot;)))</span>
+<span class="pc bpc" id="L34" title="3 of 4 branches missed.">                || (!accountType.contentEquals(&quot;CHECK&quot;) &amp;&amp; !accountType.contentEquals(&quot;SAVINGS&quot;))) {</span>
+<span class="fc" id="L35">            return &quot;FAILED&quot;;</span>
+        } else {
+<span class="fc" id="L37">            return accountEntityFacade.createAccount(accountType, personKey, bankRes);</span>
+        }
+    }
+
+    @Override
+    public List&lt;Account&gt; findAccount(String personKey) {
+<span class="fc" id="L43">        List&lt;Account&gt; accounts = new ArrayList&lt;&gt;();</span>
+        try {
+<span class="fc" id="L45">            String personRes = httpHelper.get(&quot;http://project-python-1:8060/find.key&quot;, &quot;key&quot;, personKey);</span>
+<span class="fc bfc" id="L46" title="All 2 branches covered.">            if (personRes.equals(&quot;null&quot;)) {</span>
+<span class="fc" id="L47">                return accounts;</span>
+            }
+<span class="fc" id="L49">            accounts = accountEntityFacade.findPersonAccount(personKey);</span>
+
+<span class="nc" id="L51">        } catch (Exception e) {</span>
+<span class="nc" id="L52">            System.out.println(e.getStackTrace());</span>
+<span class="nc" id="L53">            return accounts;</span>
+<span class="fc" id="L54">        }</span>
+<span class="fc" id="L55">        return accounts;</span>
+    }
+
+    @Override
+    public String debitAccount(long accountId, long debitAmount) {
+<span class="fc" id="L60">        String res = accountEntityFacade.debitAccount(accountId, debitAmount);</span>
+<span class="fc" id="L61">        return res;</span>
+    }
+
+    @Override
+    public String creditAccount(long accountID, long creditAmount) {
+<span class="fc" id="L66">        String res = accountEntityFacade.creditAccount(accountID, creditAmount);</span>
+<span class="fc" id="L67">        return res;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>
